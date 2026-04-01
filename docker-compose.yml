@@ -1,0 +1,112 @@
+# OpenClaude Docker Compose Configuration
+# For deployment on Coolify or any Docker-based platform
+
+version: '3.8'
+
+services:
+  openclaude:
+    # Build configuration
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    # Or use pre-built image (uncomment if you push to registry)
+    # image: your-registry.com/openclaude:latest
+    
+    container_name: openclaude
+    
+    # Restart policy - always restart on failure
+    restart: unless-stopped
+    
+    # Environment variables
+    # IMPORTANT: Override these in Coolify UI or use .env file
+    environment:
+      # Core OpenClaude settings
+      - NODE_ENV=production
+      - CLAUDE_CODE_USE_OPENAI=${CLAUDE_CODE_USE_OPENAI:-1}
+      
+      # OpenAI Provider (default)
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      
+      # Alternative: Codex Provider
+      # - OPENAI_MODEL=codexplan
+      # - CODEX_API_KEY=${CODEX_API_KEY}
+      # - CODEX_AUTH_JSON_PATH=${CODEX_AUTH_JSON_PATH}
+      
+      # Alternative: Ollama (local)
+      # - OPENAI_BASE_URL=http://host.docker.internal:11434/v1
+      # - OPENAI_MODEL=llama3.3:70b
+      
+      # Alternative: DeepSeek
+      # - OPENAI_BASE_URL=https://api.deepseek.com/v1
+      # - OPENAI_MODEL=deepseek-chat
+      
+      # Alternative: Gemini (via OpenRouter)
+      # - OPENAI_BASE_URL=https://openrouter.ai/api/v1
+      # - OPENAI_MODEL=google/gemini-2.0-flash
+      
+      # Optional: Additional settings
+      - TZ=${TZ:-UTC}
+    
+    # Persistent volumes
+    volumes:
+      # OpenClaude configuration and memory
+      - openclaude_config:/root/.openclaude
+      
+      # Workspace directory for file operations
+      - openclaude_workspace:/workspace
+      
+      # Optional: Mount your local projects
+      # - ./projects:/workspace/projects:rw
+    
+    # Optional: Network mode
+    # Use host network if you need to access local services like Ollama
+    # network_mode: host
+    
+    # Or use custom network
+    networks:
+      - openclaude_network
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "openclaude", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    # Resource limits (adjust based on your needs)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Keep container running
+    # The entrypoint.sh will handle this
+    stdin_open: true
+    tty: true
+
+# Named volumes for persistence
+volumes:
+  openclaude_config:
+    driver: local
+  openclaude_workspace:
+    driver: local
+
+# Network configuration
+networks:
+  openclaude_network:
+    driver: bridge
