@@ -1,11 +1,11 @@
 # OpenClaude Docker Compose Configuration
-# For deployment on Coolify or any Docker-based platform
+# Optimized for Coolify deployment with Bun-based build
 
 version: '3.8'
 
 services:
   openclaude:
-    # Build configuration
+    # Build configuration using new Bun-based Dockerfile
     build:
       context: .
       dockerfile: Dockerfile

@@ -1,10 +1,11 @@
 # OpenClaude .dockerignore
 # Prevents unnecessary files from being copied into Docker image
 
-# Node modules (will be installed in container)
+# Node modules and package manager caches (will be installed in container)
 node_modules
 .npm
 .yarn
+.bun
 
 # Build output (will be built in container)
 dist

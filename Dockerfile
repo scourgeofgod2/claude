@@ -1,10 +1,10 @@
-# OpenClaude Dockerfile - Simplified build for Coolify deployment
-# This creates an optimized production image for running openclaude CLI in a container
+# OpenClaude Dockerfile - Bun-based build for Coolify deployment
+# Multi-stage build: Bun for building, Node.js for runtime
 
 # ============================================================================
-# Stage 1: Builder
+# Stage 1: Builder - Build with Bun
 # ============================================================================
-FROM node:20-alpine AS builder
+FROM oven/bun:1.2-alpine AS builder
 
 WORKDIR /app
 
@@ -15,26 +15,28 @@ RUN apk add --no-cache \
     g++ \
     git
 
-# Copy package files
-COPY package.json package-lock.json* ./
+# Copy package files first for better layer caching
+COPY package.json bun.lock ./
 
-# Install dependencies with npm
-RUN npm ci --include=dev || npm install
+# Install dependencies with Bun (much faster than npm)
+# --frozen-lockfile ensures reproducible builds
+RUN bun install --frozen-lockfile
 
 # Copy source code and configuration
 COPY . .
 
-# Build the application with node
-RUN npm run build
+# Build the application with Bun
+# This compiles TypeScript and creates dist/cli.mjs
+RUN bun run build
 
 # ============================================================================
-# Stage 3: Production Runtime
+# Stage 2: Production Runtime - Run with Node.js
 # ============================================================================
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Install bash for better shell experience and other utilities
+# Install runtime dependencies
 RUN apk add --no-cache \
     bash \
     git \
@@ -42,17 +44,13 @@ RUN apk add --no-cache \
     ca-certificates \
     && rm -rf /var/cache/apk/*
 
-# Create non-root user for security (optional, can run as root for convenience)
-# RUN addgroup --system --gid 1001 openclaude && \
-#     adduser --system --uid 1001 openclaude
-
-# Copy built application from builder
+# Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/bin ./bin
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/README.md ./README.md
 
-# Copy node_modules from builder
+# Copy node_modules from builder (already installed by Bun)
 COPY --from=builder /app/node_modules ./node_modules
 
 # Make the binary executable
@@ -72,12 +70,12 @@ ENV NODE_ENV=production \
     CLAUDE_CODE_USE_OPENAI=1 \
     PATH="/app/bin:${PATH}"
 
-# Health check to ensure container is running
+# Health check to ensure container is running properly
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD openclaude --version || exit 1
 
 # Copy entrypoint script
-COPY entrypoint.sh /entrypoint.sh
+COPY --from=builder /app/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Expose port (not really needed for CLI, but useful if you add API later)
