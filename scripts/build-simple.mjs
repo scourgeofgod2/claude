@@ -4,6 +4,7 @@
  */
 
 import { readFileSync, mkdirSync } from 'fs'
+import { resolve } from 'path'
 import { build } from 'esbuild'
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
@@ -105,7 +106,9 @@ const featureGatedPatterns = [
 
 // Check if a path matches any feature-gated pattern
 function isFeatureGated(path) {
-  return featureGatedPatterns.some(pattern => pattern.test(path))
+  // Normalize Windows paths to Unix-style for pattern matching
+  const normalizedPath = path.replace(/\\/g, '/')
+  return featureGatedPatterns.some(pattern => pattern.test(normalizedPath))
 }
 
 try {
@@ -174,14 +177,17 @@ try {
             }
             
             // Check if this is a feature-gated module
+            // Normalize path properly for relative imports
             const fullPath = args.path.startsWith('.')
-              ? `${args.resolveDir}/${args.path}`
+              ? resolve(args.resolveDir, args.path)
               : args.path
             
-            if (isFeatureGated(fullPath) || isFeatureGated(args.path)) {
-              // Return stub instead of trying to resolve
+            // Test both original and normalized paths
+            if (isFeatureGated(args.path) || isFeatureGated(fullPath)) {
+              // Return stub with normalized absolute path
+              // This prevents esbuild from trying to resolve relative paths
               return {
-                path: args.path,
+                path: fullPath,
                 namespace: 'feature-stub',
                 pluginData: { originalPath: args.path }
               }
