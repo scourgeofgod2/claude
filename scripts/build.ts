@@ -96,6 +96,253 @@ export async function handleBgFlag() { throw new Error("Background sessions are 
             '../self-hosted-runner/main.js',
             'export async function selfHostedRunnerMain() { throw new Error("Self-hosted runner is unavailable in the open build."); }',
           ],
+          // Service stubs
+          [
+            '../services/compact/cachedMCConfig.js',
+            'export const cachedMCConfig = {}; export default {};',
+          ],
+          [
+            '../services/compact/snipProjection.js',
+            'export function createSnipProjection() { return null; } export default {};',
+          ],
+          [
+            '../services/skillSearch/featureCheck.js',
+            'export function checkSkillSearchFeature() { return false; } export default false;',
+          ],
+          [
+            '../services/skillSearch/prefetch.js',
+            'export function prefetchSkills() { return Promise.resolve(); } export default {};',
+          ],
+          [
+            '../services/skillSearch/localSearch.js',
+            'export function localSearch() { return []; } export default {};',
+          ],
+          [
+            '../services/sessionTranscript/sessionTranscript.js',
+            'export function getSessionTranscript() { return ""; } export default {};',
+          ],
+          [
+            '../services/compact/reactiveCompact.js',
+            'export function reactiveCompact() { return null; } export default {};',
+          ],
+          // Proactive module
+          [
+            '../proactive/index.js',
+            'export const proactiveModule = null; export default null;',
+          ],
+          [
+            '../../proactive/index.js',
+            'export const proactiveModule = null; export default null;',
+          ],
+          [
+            './proactive/index.js',
+            'export const proactiveModule = null; export default null;',
+          ],
+          // Assistant modules
+          [
+            './assistant/index.js',
+            'export const assistantModule = null; export default null;',
+          ],
+          [
+            './assistant/gate.js',
+            'export const kairosGate = null; export default null;',
+          ],
+          [
+            './assistant/sessionDiscovery.js',
+            'export function discoverSessions() { return []; } export default {};',
+          ],
+          // Server modules
+          [
+            './server/parseConnectUrl.js',
+            'export function parseConnectUrl() { return null; } export default {};',
+          ],
+          [
+            './server/server.js',
+            'export function startServer() { throw new Error("Server is unavailable in the open build."); } export default {};',
+          ],
+          [
+            './server/sessionManager.js',
+            'export class SessionManager {} export default {};',
+          ],
+          [
+            './server/backends/dangerousBackend.js',
+            'export const dangerousBackend = null; export default null;',
+          ],
+          [
+            './server/serverBanner.js',
+            'export function showBanner() {} export default {};',
+          ],
+          [
+            './server/serverLog.js',
+            'export function logServer() {} export default {};',
+          ],
+          [
+            './server/lockfile.js',
+            'export function createLockfile() {} export function removeLockfile() {} export default {};',
+          ],
+          [
+            './server/connectHeadless.js',
+            'export function connectHeadless() { throw new Error("Headless connection is unavailable in the open build."); } export default {};',
+          ],
+          // SSH module
+          [
+            './ssh/createSSHSession.js',
+            'export function createSSHSession() { throw new Error("SSH is unavailable in the open build."); } export default {};',
+          ],
+          // Tool prompts
+          [
+            '../tools/DiscoverSkillsTool/prompt.js',
+            'export const DISCOVER_SKILLS_TOOL_PROMPT = ""; export default "";',
+          ],
+          [
+            '../SendUserFileTool/prompt.js',
+            'export const SEND_USER_FILE_TOOL_PROMPT = ""; export default "";',
+          ],
+          [
+            '../tools/SnipTool/prompt.js',
+            'export const SNIP_TOOL_PROMPT = ""; export default "";',
+          ],
+          [
+            '../../tools/TerminalCaptureTool/prompt.js',
+            'export const TERMINAL_CAPTURE_TOOL_PROMPT = ""; export default "";',
+          ],
+          // Tools
+          [
+            './tools/SleepTool/SleepTool.js',
+            'export class SleepTool {} export default SleepTool;',
+          ],
+          [
+            './tools/MonitorTool/MonitorTool.js',
+            'export class MonitorTool {} export default MonitorTool;',
+          ],
+          [
+            './tools/SendUserFileTool/SendUserFileTool.js',
+            'export class SendUserFileTool {} export default SendUserFileTool;',
+          ],
+          [
+            './tools/PushNotificationTool/PushNotificationTool.js',
+            'export class PushNotificationTool {} export default PushNotificationTool;',
+          ],
+          [
+            './tools/SubscribePRTool/SubscribePRTool.js',
+            'export class SubscribePRTool {} export default SubscribePRTool;',
+          ],
+          [
+            './tools/OverflowTestTool/OverflowTestTool.js',
+            'export class OverflowTestTool {} export default OverflowTestTool;',
+          ],
+          [
+            '../../tools/OverflowTestTool/OverflowTestTool.js',
+            'export class OverflowTestTool {} export default OverflowTestTool;',
+          ],
+          [
+            './tools/CtxInspectTool/CtxInspectTool.js',
+            'export class CtxInspectTool {} export default CtxInspectTool;',
+          ],
+          [
+            './tools/TerminalCaptureTool/TerminalCaptureTool.js',
+            'export class TerminalCaptureTool {} export default TerminalCaptureTool;',
+          ],
+          [
+            './tools/WebBrowserTool/WebBrowserTool.js',
+            'export class WebBrowserTool {} export default WebBrowserTool;',
+          ],
+          [
+            './tools/SnipTool/SnipTool.js',
+            'export class SnipTool {} export default SnipTool;',
+          ],
+          [
+            './tools/ListPeersTool/ListPeersTool.js',
+            'export class ListPeersTool {} export default ListPeersTool;',
+          ],
+          [
+            './tools/WorkflowTool/bundled/index.js',
+            'export function initBundledWorkflows() {} export default {};',
+          ],
+          [
+            './tools/WorkflowTool/WorkflowTool.js',
+            'export class WorkflowTool {} export default WorkflowTool;',
+          ],
+          [
+            './tools/WorkflowTool/createWorkflowCommand.js',
+            'export function createWorkflowCommand() { return null; } export default null;',
+          ],
+          [
+            '../../tools/VerifyPlanExecutionTool/constants.js',
+            'export const VERIFY_PLAN_EXECUTION_TOOL_NAME = "verify_plan_execution"; export default {};',
+          ],
+          // Commands
+          [
+            './commands/proactive.js',
+            'export default null;',
+          ],
+          [
+            './commands/assistant/index.js',
+            'export default null;',
+          ],
+          [
+            './commands/remoteControlServer/index.js',
+            'export default null;',
+          ],
+          [
+            './commands/force-snip.js',
+            'export default null;',
+          ],
+          [
+            './commands/workflows/index.js',
+            'export const workflowCommands = null; export default null;',
+          ],
+          [
+            './commands/subscribe-pr.js',
+            'export default null;',
+          ],
+          [
+            './commands/torch.js',
+            'export default null;',
+          ],
+          [
+            './commands/peers/index.js',
+            'export const peersCommands = null; export default null;',
+          ],
+          [
+            './commands/fork/index.js',
+            'export const forkCommands = null; export default null;',
+          ],
+          [
+            './commands/buddy/index.js',
+            'export const buddyCommands = null; export default null;',
+          ],
+          // Utility modules
+          [
+            '../../utils/attributionHooks.js',
+            'export function registerAttributionHooks() {} export default {};',
+          ],
+          [
+            './attributionTrailer.js',
+            'export function buildPRTrailers() { return ""; } export default {};',
+          ],
+          [
+            './utils/taskSummary.js',
+            'export function generateTaskSummary() { return ""; } export default {};',
+          ],
+          [
+            '../../utils/systemThemeWatcher.js',
+            'export function watchSystemTheme() {} export function unwatchSystemTheme() {} export default {};',
+          ],
+          [
+            './jobs/classifier.js',
+            'export function classifyJob() { return null; } export default {};',
+          ],
+          // Skills
+          [
+            '../../skills/mcpSkills.js',
+            'export const mcpSkills = []; export default [];',
+          ],
+          // Coordinator
+          [
+            '../../coordinator/workerAgent.js',
+            'export class WorkerAgent {} export default WorkerAgent;',
+          ],
         ] as const)
 
         // Resolve `import { feature } from 'bun:bundle'` to a shim
@@ -112,7 +359,7 @@ export async function handleBgFlag() { throw new Error("Background sessions are 
         )
 
         build.onResolve(
-          { filter: /^\.\.\/(daemon\/workerRegistry|daemon\/main|cli\/bg|cli\/handlers\/templateJobs|environment-runner\/main|self-hosted-runner\/main)\.js$/ },
+          { filter: /\.js$/ },
           args => {
             if (!internalFeatureStubModules.has(args.path)) return null
             return {
@@ -157,6 +404,7 @@ export async function handleBgFlag() { throw new Error("Background sessions are 
           'sharp',
           '@anthropic-ai/mcpb',
           '@ant/claude-for-chrome-mcp',
+          '@ant/computer-use-mcp',
           '@anthropic-ai/sandbox-runtime',
           'asciichart',
           'plist',
