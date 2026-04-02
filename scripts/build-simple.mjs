@@ -13,12 +13,21 @@ mkdirSync('./dist', { recursive: true })
 
 // Feature-gated module patterns (regex patterns to match and mark as external)
 const featureGatedPatterns = [
+  // CLI runners (not in open-source)
+  /\/cli\/bg\.js$/,
+  /\/cli\/handlers\//,
+  /\/environment-runner\//,
+  /\/self-hosted-runner\//,
+  
+  // Services
   /\/services\/compact\/reactiveCompact\.js$/,
   /\/services\/compact\/snipProjection\.js$/,
   /\/services\/compact\/cachedMCConfig\.js$/,
   /\/services\/skillSearch\//,
   /\/services\/sessionTranscript\//,
   /\/services\/contextCollapse\//,
+  
+  // Feature-gated modules
   /\/assistant\//,
   /\/proactive\//,
   /\/server\//,
@@ -26,9 +35,13 @@ const featureGatedPatterns = [
   /\/daemon\//,
   /\/bridge\/peerSessions\.js$/,
   /\/jobs\/classifier\.js$/,
+  
+  // Tasks
   /\/tasks\/LocalWorkflowTask\//,
   /\/tasks\/MonitorMcpTask\//,
-  /\/tools\/SendUserFileTool\/prompt\.js$/,
+  
+  // Tools
+  /\/tools\/SendUserFileTool\//,
   /\/tools\/WebBrowserTool\//,
   /\/tools\/MonitorTool\//,
   /\/tools\/WorkflowTool\//,
@@ -43,17 +56,28 @@ const featureGatedPatterns = [
   /\/tools\/ListPeersTool\//,
   /\/tools\/DiscoverSkillsTool\//,
   /\/tools\/VerifyPlanExecutionTool\//,
+  
+  // Utils
   /\/utils\/udsMessaging\.js$/,
   /\/utils\/udsClient\.js$/,
   /\/utils\/attributionHooks\.js$/,
   /\/utils\/attributionTrailer\.js$/,
   /\/utils\/systemThemeWatcher\.js$/,
   /\/utils\/taskSummary\.js$/,
+  /\/utils\/permissions\/yolo-classifier-prompts\//,
+  
+  // Memdir
   /\/memdir\/memoryShapeTelemetry\.js$/,
+  
+  // Skills
   /\/skills\/bundled\/dream\.js$/,
   /\/skills\/bundled\/hunter\.js$/,
   /\/skills\/bundled\/runSkillGenerator\.js$/,
+  /\/skills\/bundled\/verify\//,
+  /\/skills\/bundled\/claude-api\//,
   /\/skills\/mcpSkills\.js$/,
+  
+  // Components
   /\/components\/messages\/SnipBoundaryMessage\.js$/,
   /\/components\/messages\/UserGitHubWebhookMessage\.js$/,
   /\/components\/messages\/UserForkBoilerplateMessage\.js$/,
@@ -62,7 +86,11 @@ const featureGatedPatterns = [
   /\/components\/tasks\/MonitorMcpDetailDialog\.js$/,
   /\/components\/permissions\/ReviewArtifactPermissionRequest\//,
   /\/components\/permissions\/MonitorPermissionRequest\//,
+  
+  // Coordinator
   /\/coordinator\/workerAgent\.js$/,
+  
+  // Commands
   /\/commands\/proactive\.js$/,
   /\/commands\/assistant\//,
   /\/commands\/remoteControlServer\//,
@@ -126,38 +154,78 @@ try {
     ],
     plugins: [
       {
-        name: 'feature-gated-externals',
+        name: 'feature-stub-plugin',
         setup(build) {
-          // Mark feature-gated modules as external using plugin
-          build.onResolve({ filter: /\.js$/ }, (args) => {
-            // Only process source files, not already external modules
-            if (args.namespace !== 'file') return
+          // Intercept ALL imports/requires to check for feature-gated modules
+          build.onResolve({ filter: /.*/ }, (args) => {
+            // Skip node_modules and already resolved
+            if (args.path.includes('node_modules') || args.namespace === 'feature-stub') {
+              return
+            }
             
-            // Check if this path matches any feature-gated pattern
-            if (isFeatureGated(args.path)) {
-              return { path: args.path, external: true }
+            // Special case: bun:bundle
+            if (args.path === 'bun:bundle') {
+              return { path: 'bun:bundle', namespace: 'feature-stub' }
+            }
+            
+            // Special case: react/compiler-runtime
+            if (args.path === 'react/compiler-runtime') {
+              return { path: 'react/compiler-runtime', namespace: 'feature-stub' }
+            }
+            
+            // Check if this is a feature-gated module
+            const fullPath = args.path.startsWith('.')
+              ? `${args.resolveDir}/${args.path}`
+              : args.path
+            
+            if (isFeatureGated(fullPath) || isFeatureGated(args.path)) {
+              // Return stub instead of trying to resolve
+              return {
+                path: args.path,
+                namespace: 'feature-stub',
+                pluginData: { originalPath: args.path }
+              }
             }
           })
           
-          // Stub bun:bundle
-          build.onResolve({ filter: /^bun:bundle$/ }, () => ({
-            path: 'bun:bundle',
-            namespace: 'stub',
-          }))
-          build.onLoad({ filter: /.*/, namespace: 'stub' }, () => ({
-            contents: 'export function feature() { return false; }',
-            loader: 'js',
-          }))
-          
-          // Stub react/compiler-runtime
-          build.onResolve({ filter: /^react\/compiler-runtime$/ }, () => ({
-            path: 'react/compiler-runtime',
-            namespace: 'stub-react',
-          }))
-          build.onLoad({ filter: /.*/, namespace: 'stub-react' }, () => ({
-            contents: 'export function c(size) { return new Array(size).fill(Symbol.for("react.memo_cache_sentinel")); }',
-            loader: 'js',
-          }))
+          // Provide stub content for all feature-gated modules
+          build.onLoad({ filter: /.*/, namespace: 'feature-stub' }, (args) => {
+            // Special stubs
+            if (args.path === 'bun:bundle') {
+              return {
+                contents: 'export function feature() { return false; }',
+                loader: 'js',
+              }
+            }
+            
+            if (args.path === 'react/compiler-runtime') {
+              return {
+                contents: 'export function c(size) { return new Array(size).fill(Symbol.for("react.memo_cache_sentinel")); }',
+                loader: 'js',
+              }
+            }
+            
+            // Generic stub for feature-gated modules
+            const ext = args.path.split('.').pop()
+            
+            // For text/markdown files
+            if (ext === 'txt' || ext === 'md') {
+              return {
+                contents: 'export default ""',
+                loader: 'js',
+              }
+            }
+            
+            // For JS modules - provide empty exports
+            return {
+              contents: `
+                // Stub for feature-gated module: ${args.path}
+                export default {};
+                export const feature = () => false;
+              `,
+              loader: 'js',
+            }
+          })
         },
       },
     ],
