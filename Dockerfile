@@ -1,10 +1,7 @@
-# OpenClaude Dockerfile - Bun-based build for Coolify deployment
-# Multi-stage build: Bun for building, Node.js for runtime
+# OpenClaude Dockerfile - Node.js-based build for Coolify deployment
+# Single-stage build with Node.js (Bun has CPU compatibility issues)
 
-# ============================================================================
-# Stage 1: Builder - Build with Bun
-# ============================================================================
-FROM oven/bun:1.2-alpine AS builder
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -13,45 +10,25 @@ RUN apk add --no-cache \
     python3 \
     make \
     g++ \
-    git
+    git \
+    bash
 
 # Copy package files first for better layer caching
-COPY package.json bun.lock ./
+COPY package.json package-lock.json* ./
 
-# Install dependencies with Bun (much faster than npm)
-# --frozen-lockfile ensures reproducible builds
-RUN bun install --frozen-lockfile
+# Install dependencies with npm
+# Using --legacy-peer-deps for compatibility
+RUN npm install --legacy-peer-deps
 
 # Copy source code and configuration
 COPY . .
 
-# Build the application with Bun
+# Build the application with Node.js
 # This compiles TypeScript and creates dist/cli.mjs
-RUN bun run build
+RUN npm run build
 
-# ============================================================================
-# Stage 2: Production Runtime - Run with Node.js
-# ============================================================================
-FROM node:20-alpine AS runner
-
-WORKDIR /app
-
-# Install runtime dependencies
-RUN apk add --no-cache \
-    bash \
-    git \
-    curl \
-    ca-certificates \
-    && rm -rf /var/cache/apk/*
-
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/bin ./bin
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/README.md ./README.md
-
-# Copy node_modules from builder (already installed by Bun)
-COPY --from=builder /app/node_modules ./node_modules
+# Production files are already in place (single stage)
+# No need to copy from builder stage
 
 # Make the binary executable
 RUN chmod +x ./bin/openclaude
@@ -75,7 +52,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD openclaude --version || exit 1
 
 # Copy entrypoint script
-COPY --from=builder /app/entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Expose port (not really needed for CLI, but useful if you add API later)
